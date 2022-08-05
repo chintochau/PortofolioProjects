@@ -1,4 +1,50 @@
 ## MySQL exercises (questions from StrataScratch.com)
+
+### Hard Q1. Monthly Percentage Difference
+Given a table of purchases by date, calculate the month-over-month percentage change in revenue. The output should include the year-month date (YYYY-MM) and percentage change, rounded to the 2nd decimal point, and sorted from the beginning of the year to the end of the year.
+The percentage change column will be populated from the 2nd month forward and can be calculated as ((this month's revenue - last month's revenue) / last month's revenue)*100.
+
+Tables:  
+
+~~~~
+sf_transactions
+Preview
+id:
+int
+created_at:
+datetime
+value:
+int
+purchase_id:
+int
+~~~~
+
+``` sql
+with m as
+(select  created_at month, sum(value) monthly_value
+from sf_transactions
+group by month(created_at))
+
+select 
+    DATE_FORMAT(month,'%Y-%m'), 
+    round((monthly_value - LAG(monthly_value,1) OVER (order by month))*100/
+    (LAG(monthly_value,1) OVER (order by month)),2) change_in_percentage
+from m
+
+-- OR
+
+select 
+    DATE_FORMAT(created_at,'%Y-%m') ,
+    sum(value), 
+    round((sum(value) - lag(SUM(value),1) over (order by month(created_at)))*100/
+    lag(SUM(value),1) over (order by month(created_at)),2) percentage_change
+from sf_transactions
+group by month(created_at)
+
+
+```
+
+
 ### Q1. Workers With The Highest Salaries - Medium
 Find the titles of workers that earn the highest salary. Output the highest-paid title or multiple titles that share the highest salary.
 
@@ -372,11 +418,51 @@ Output the employee title, gender (i.e., sex), along with the average total comp
 
 Tables:  
 ~~~~
-
+sf_employee
+Preview
+id:
+int
+first_name:
+varchar
+last_name:
+varchar
+age:
+int
+sex:
+varchar
+employee_title:
+varchar
+department:
+varchar
+salary:
+int
+target:
+int
+email:
+varchar
+city:
+varchar
+address:
+varchar
+manager_id:
+int
+sf_bonus
+Preview
+worker_ref_id:
+int
+bonus:
+int
+bonus_date:
+datetime
 ~~~~
 
 ``` sql
-
+select employee_title,sex, avg(total) from
+(select *,sum(distinct e.salary) + sum(b.bonus) as total from sf_employee e
+join sf_bonus b
+on e.id = b.worker_ref_id
+group by e.id) t
+group by employee_title
 ```
 
 
