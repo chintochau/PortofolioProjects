@@ -572,19 +572,3 @@ on e.id = b.worker_ref_id
 group by e.id) t
 group by employee_title
 ```
-
-
-<!--Template-->
-
-### Q2. 
-
-
-Tables:  
-
-~~~~
-
-~~~~
-
-``` sql
-
-```
