@@ -9,14 +9,10 @@ Tables:
 ~~~~
 sf_transactions
 Preview
-id:
-int
-created_at:
-datetime
-value:
-int
-purchase_id:
-int
+id:int
+created_at:datetime
+value:int
+purchase_id:int
 ~~~~
 
 ``` sql
@@ -43,6 +39,90 @@ group by month(created_at)
 
 
 ```
+
+
+### Hard Q2. Premium vs Freemium
+Find the total number of downloads for paying and non-paying users by date. Include only records where non-paying customers have more downloads than paying customers. The output should be sorted by earliest date first and contain 3 columns date, non-paying downloads, paying downloads.
+
+Tables:  
+
+~~~~
+ms_user_dimension
+Preview
+user_id:int
+acc_id:int
+ms_acc_dimension
+Preview
+acc_id:int
+paying_customer:varchar
+ms_download_factsPreview
+date:datetime
+user_id:int
+downloads:int
+~~~~
+
+``` sql
+with all_table as(
+    select u.user_id,a.acc_id,d.date,d.downloads,a.paying_customer 
+    from ms_user_dimension u
+    join 
+    ms_acc_dimension a
+    on u.acc_id = a.acc_id
+    join
+    ms_download_facts d
+    on u.user_id = d.user_id)
+
+select date,
+    sum(case when paying_customer = 'yes' 
+    then downloads else null end) paying_downloads,
+    sum(case when paying_customer = 'no' 
+    then downloads else null end) non_paying_downloads
+    from all_table
+    group by date
+    having paying_downloads < non_paying_downloads
+    order by date
+
+```
+
+### Hard Q3. Popularity Percentage
+Find the popularity percentage for each user on Meta/Facebook. The popularity percentage is defined as the total number of friends the user has divided by the total number of users on the platform, then converted into a percentage by multiplying by 100.
+Output each user along with their popularity percentage. Order records in ascending order by user id.
+The 'user1' and 'user2' column are pairs of friends.
+
+Tables:  
+
+~~~~
+facebook_friends
+Preview
+user1:int
+user2:int
+~~~~
+
+``` sql
+with m as (select * 
+from facebook_friends a
+union
+select user2 as user1, user1 as user2
+from facebook_friends b
+order by user1) 
+
+select user1, count(user2), count(user2)*100/(select count(distinct user2) from m)
+from m
+group by user1
+
+--OR using over()
+
+select user1, count(user2), count(user2)*100/count(user1) over() from
+(select * 
+from facebook_friends a
+union
+select user2 as user1, user1 as user2
+from facebook_friends b
+order by user1) t
+group by user1
+
+```
+
 
 
 ### Q1. Workers With The Highest Salaries - Medium
@@ -420,40 +500,24 @@ Tables:
 ~~~~
 sf_employee
 Preview
-id:
-int
-first_name:
-varchar
-last_name:
-varchar
-age:
-int
-sex:
-varchar
-employee_title:
-varchar
-department:
-varchar
-salary:
-int
-target:
-int
-email:
-varchar
-city:
-varchar
-address:
-varchar
-manager_id:
-int
+id:int
+first_name:varchar
+last_name:varchar
+age:int
+sex:varchar
+employee_title:varchar
+department:varchar
+salary:int
+target:int
+email:varchar
+city:varchar
+address:varchar
+manager_id:int
 sf_bonus
 Preview
-worker_ref_id:
-int
-bonus:
-int
-bonus_date:
-datetime
+worker_ref_id:int
+bonus:int
+bonus_date:datetime
 ~~~~
 
 ``` sql
