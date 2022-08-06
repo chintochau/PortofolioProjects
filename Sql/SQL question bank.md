@@ -1,4 +1,6 @@
 ## MySQL exercises (questions from StrataScratch.com)
+![螢幕擷取畫面 2022-08-06 092937](https://user-images.githubusercontent.com/28828270/183251039-06744f65-75e1-4b3b-84cf-8eb52461ff9f.jpg)
+
 
 ### Hard Q1. Monthly Percentage Difference
 Given a table of purchases by date, calculate the month-over-month percentage change in revenue. The output should include the year-month date (YYYY-MM) and percentage change, rounded to the 2nd decimal point, and sorted from the beginning of the year to the end of the year.
@@ -133,16 +135,11 @@ Tables:
 ~~~~
 marketing_campaign
 Preview
-user_id:
-int
-created_at:
-datetime
-product_id:
-int
-quantity:
-int
-price:
-int
+user_id:int
+created_at:datetime
+product_id:int
+quantity:int
+price:int
 ~~~~
 
 ``` sql
@@ -167,6 +164,139 @@ from
     from marketing_campaign
 ) t1
 where date_rnk > 1 and product_rnk = 1
+```
+
+### Hard Q5. Top 5 States With 5 Star Businesses
+Find the top 5 states with the most 5 star businesses. Output the state name along with the number of 5-star businesses and order records by the number of 5-star businesses in descending order. In case there are ties in the number of businesses, return all the unique states. If two states have the same result, sort them in alphabetical order.
+
+Tables:  
+yelp_business
+Preview
+business_id:varchar
+name:varchar
+neighborhood:varchar
+address:varchar
+city:varchar
+state:varchar
+postal_code:varchar
+latitude:float
+longitude:float
+stars:float
+review_count:int
+is_open:int
+categories:varchar
+~~~~
+
+~~~~
+
+``` sql
+select state, number,ranking from
+(select state,count(stars) number,rank() over (order by count(stars) desc) ranking  from yelp_business
+where stars = 5
+group by state
+) t
+where ranking <=5
+```
+
+
+### Hard Q6. Counting Instances in Text
+Find the number of times the words 'bull' and 'bear' occur in the contents. We're counting the number of times the words occur so words like 'bullish' should not be included in our count.
+Output the word 'bull' and 'bear' along with the corresponding number of occurrences.
+
+Tables:  
+
+~~~~
+google_file_store
+Preview
+filename:varchar
+contents:varchar
+~~~~
+
+``` sql
+with m as 
+(SELECT 
+    filename,
+    contents,    
+    sum(ROUND (   
+        (
+            LENGTH(contents)
+            - LENGTH( REPLACE ( contents, "bull ", "") ) 
+        ) / LENGTH("bull ")        
+    )) AS bull_count,   
+    sum(ROUND (   
+        (
+            LENGTH(contents)
+            - LENGTH( REPLACE ( contents, "bear ", "") ) 
+        ) / LENGTH("bear ")        
+    )) as bear_count  
+from google_file_store)
+
+select 'bull',bull_count as value from m
+union all 
+select 'bear',bear_count as value from m
+```
+
+
+### Hard Q7. Host Popularity Rental Prices
+You’re given a table of rental property searches by users. The table consists of search results and outputs host information for searchers. Find the minimum, average, maximum rental prices for each host’s popularity rating. The host’s popularity rating is defined as below:0 reviews: New
+1 to 5 reviews: Rising
+6 to 15 reviews: Trending Up
+16 to 40 reviews: Popular
+more than 40 reviews: Hot
+
+
+Tip: The id column in the table refers to the search ID. You'll need to create your own host_id by concating price, room_type, host_since, zipcode, and number_of_reviews.
+
+
+Output host popularity rating and their minimum, average and maximum rental prices.
+
+Tables:  
+
+~~~~
+airbnb_host_searches
+Preview
+id:int
+price:float
+property_type:varchar
+room_type:varchar
+amenities:varchar
+accommodates:int
+bathrooms:int
+bed_type:varchar
+cancellation_policy:varchar
+cleaning_fee:bool
+city:varchar
+host_identity_verified:varchar
+host_response_rate:varchar
+host_since:datetime
+neighbourhood:varchar
+number_of_reviews:int
+review_scores_rating:float
+zipcode:int
+bedrooms:int
+beds:int
+~~~~
+
+``` sql
+with m as(select 
+    concat(price, room_type, host_since, zipcode,number_of_reviews) host_id,
+    price,
+    Case 
+    when number_of_reviews > 40 then 'Hot' 
+    when number_of_reviews >= 16 then 'Popular' 
+    when number_of_reviews >= 6 then 'Trending Up' 
+    when number_of_reviews >= 1 then 'Rising' 
+    else 'New' end popularity
+from airbnb_host_searches
+group by host_id)
+
+select 
+    popularity as host_pop_rating, 
+    min(price) as min_price,
+    avg(price) as min_price,
+    max(price) as max_price
+    from m
+group by 1
 ```
 
 ### Q1. Workers With The Highest Salaries - Medium
@@ -571,4 +701,20 @@ join sf_bonus b
 on e.id = b.worker_ref_id
 group by e.id) t
 group by employee_title
+```
+
+
+<!--Template-->
+
+### Q2. 
+
+
+Tables:  
+
+~~~~
+
+~~~~
+
+``` sql
+
 ```
